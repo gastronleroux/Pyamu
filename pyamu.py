@@ -1,4 +1,204 @@
 import math
+from random import random
+from difflib import SequenceMatcher
+#import spacy
+#from spellchecker import SpellChecker
+
+
+
+#  Natural Language Processing
+# -----------------------------------------------------------------------------------------
+
+# French language lemmatizer
+# To lemmatize your sentence:
+# lemmaObjectList = frLemmatize(yourSentence)
+#
+# To iterate trough your lemmatized sentence:
+# for x in lemmaObjectList:
+#   ...
+#
+# LemmaObject attributes:
+# 
+# x.word            --- the word originally appearing in the text.
+#
+# x.lemma           --- the base form of the original word. If the original
+#                       word is not found, it is made by analogy. If there is 
+#                       a problem finding the analogy, the original word is
+#                       repeated here.
+#
+# x.analogy         --- a word found by analogy with the original word. None 
+#                       if the original word is found or no analogy is found.
+#
+# x.analogyLemma    --- the base form of the analogous word. None if the 
+#                       original word is found or no analogy is found.
+#
+# x.corrected       --- word corrected. If the original word is found or there 
+#                       is a problem finding a similar word, the original word 
+#                       is repeated here.
+#
+# x.correctedLemma  --- base form of the word after proofreading. If the
+#                       original word is found, the underlying form repeats
+#                       itself. If there is a problem finding a similar word,
+#                       the original word is repeated here.
+#
+# x.similarity      --- the similarity between the original word and the corrected
+#                       word expressed in a floating point number from 0.0 to 1.0.
+#
+# x.probability     --- the probability of the correctness of the correction
+#                       expressed as a floating point number from 0.0 to 1.0.
+#
+
+class LemmaObject:
+    def __init__(self, word, lemma, analogy, analogyLemma,
+                 corrected, correctedLemma, similarity, probability):
+        self.word = word
+        self.lemma = lemma
+        self.analogy = analogy
+        self.analogyLemma = analogyLemma
+        self.corrected = corrected
+        self.correctedLemma = correctedLemma
+        self.similarity = similarity
+        self.probability = probability
+        
+def frLemmatize(sen):
+    lemmaObjectList = []
+    # python -m spacy download fr_core_news_lg
+    sp = spacy.load('fr_core_news_lg')
+    vocab = list(sp.vocab.strings)[214:]
+    spell = SpellChecker(language='fr') 
+    sentence = sp(sen)
+    suffixs = {}
+    suffixWords = {}
+    
+    for word in sentence:
+        if word.is_oov:
+            suffixs[word.text] = word.text
+    while len([1 for suffix in suffixs.values() if suffix == '']) < len(suffixs):
+        for word in vocab:
+            for originalWord in suffixs.keys():
+                if suffixs[originalWord] != '' and len(word) >= len(suffixs[originalWord]) \
+                        and word[-len(suffixs[originalWord]):] == suffixs[originalWord] \
+                        and not sp(word)[0].is_oov:
+                    suffixWords[originalWord] = {'analogy': word, 'suffix': suffixs[originalWord]}
+                    suffixs[originalWord] = ''
+        for originalWord in suffixs.keys():
+            if suffixs[originalWord] != '':
+                suffixs[originalWord] = suffixs[originalWord][1:]
+            
+    
+    for word in sentence:
+        lemma = word.lemma_
+        analogy = None
+        analogyLemma = None
+        corrected = word.text
+        correctedLemma = word.lemma_
+        similarity = 1.0
+        probability = 1.0
+        
+        if word.is_oov:
+            if word.text in suffixWords:
+                analogy = suffixWords[word.text]['analogy']
+                analogyLemma = sp(analogy)[0].lemma_
+                stem = analogy[:-len(suffixWords[word.text]['suffix'])]
+                suffix = analogyLemma[len(stem):]
+                lemma = word.text[:-len(suffixWords[word.text]['suffix'])] + suffix
+            
+            corrected = spell.correction(word.text)
+            correctedLemma = sp(corrected)[0].lemma_
+            similarity = SequenceMatcher(None, word.text, corrected).ratio()
+            if word.text == corrected:
+                probability = 0.0
+            elif len(spell.candidates(word.text)) > 1:
+                candidates = spell.candidates(word.text)
+                wordsProbabilityMean = sum([spell.word_probability(prob) for prob in candidates]) / len(candidates)
+                correctedProbability = spell.word_probability(corrected)
+                probability = (1 - (wordsProbabilityMean / correctedProbability))
+            if probability != 0.0:
+                probability = probability  * 0.9 + similarity * 0.1
+                    
+        lemmaObjectList.append(LemmaObject(word.text, lemma, analogy, analogyLemma, corrected, correctedLemma, similarity, probability))
+        
+    return lemmaObjectList
+
+
+
+#  Neural Networks
+# -----------------------------------------------------------------------------------------
+
+# Displays McCulloch-Pitts neuron model's results for 
+# NOT, AND, NAND and OR Gates using appropriate weight factor
+# and theta values.
+# e.g. displayGates()
+# Gate Not
+# u1 = 0, result = 1
+# u1 = 1, result = 0
+
+# Gate And
+# u1 = 0, u2 = 0, result = 0
+# ...
+def displayGates():
+    def f(x):
+        if x < 0: return 0
+        elif x >= 0: return 1
+
+    def scalar_prod(un, wn, theta):
+        un.append(-theta)
+        wn.append(1)
+        return f(sum([un[i]*wn[i] for i in range(len(un))]))
+
+    def display(uns, wn, theta, title):
+        print("Gate", title,)
+        for i in range(len(uns)):
+            for j in range(len(uns[i])):
+                print("u", j+1, " = ", uns[i][j], sep='', end=', ')
+            print("result =", scalar_prod(uns[i], wn, theta))
+        print()
+
+    display([[0], [1]], [-2], -1, "Not")
+    display([[0, 0], [1, 0], [0, 1], [1, 1]], [2, 2], 3, "And")
+    display([[0, 0], [1, 0], [0, 1], [1, 1]], [-2, -2], -3, "Nand")
+    display([[0, 0], [1, 0], [0, 1], [1, 1]], [2, 2], 1, "Or")
+
+
+# Implementation of the Gradient Method Algorithm given below.
+# Finds the local and global minimums of the following functions and
+# the points that reach this minimum:
+# (1) F1(x1, x2, x3) = 2x1^2 + 2x2^2 + x3^2 − 2x1x2 − 2x2x3 − 2x1 + 3
+# (2) F2(x1, x2) = 3x1^4 + 4x1^3 − 12x1^2 + 12x2^2 − 24x2
+# In the end displays the minimums and the result
+def displayGradientMethod():
+    def F1(vec):
+        return (2 * vec[0]**2 + 2 * vec[1]**2 + vec[2]**2 - 2 * vec[0] * vec[1] - 2 * vec[1] * vec[2] - 2 * vec[0] + 3)
+    def F2(vec):
+        return (3 * vec[0]**4 + 4 * vec[0]**3 - 12 * vec[0]**2 + 12 * vec[1]**2 - 24 * vec[1])
+    Fs = [F1, F2]
+
+    #Partial derivative functions for F1(x1, x2, x3) and F2(x1,x2)
+    def F1x1(vec): return (4 * vec[0] - 2 * vec[1] - 2)
+    def F1x2(vec): return (4 * vec[1] - 2 * vec[0] - 2 * vec[2])
+    def F1x3(vec): return (2 * vec[2] - 2 * vec[1])
+    def F2x1(vec): return (12 * vec[0]**3 + 12 * vec[0]**2 - 24 * vec[0])
+    def F2x2(vec): return (24 * vec[1] - 24)
+    DFs = [[F1x1, F1x2, F1x3], [F2x1, F2x2]]
+
+    # f - 0 means F1, 1 means F2
+    def gradient(f, N, c, eps):
+        vecOld = [random()*N*2-N for i in range(len(DFs[f]))]
+        vecNew = [vecOld[i] - c * DFs[f][i](vecOld) for i in range(len(DFs[f]))]
+        while max([vecNew[i] - vecOld[i] for i in range(len(DFs[f]))]) > eps:
+            vecOld = vecNew
+            vecNew = [vecOld[i] - c * DFs[f][i](vecOld) for i in range(len(DFs[f]))]
+        print("Results for F", (f+1), ", N = ", N, ", c = ", c, ", eps = ", eps, ":", sep='')
+        print("Local min:", vecNew)
+        print("Global min:", Fs[f](vecNew), "\n")
+    gradient(0, 1, 0.01, 0.00001)
+    gradient(1, 1, 0.01, 0.00001)
+
+
+
+#  Combinatorial Algorithms prep functions
+# -----------------------------------------------------------------------------------------
+
 
 # Check if x is None. If so, returns y, if not, returns x.
 def ifVarNone(x, y):

@@ -1,6 +1,7 @@
 import math
 from random import random
 from difflib import SequenceMatcher
+import numpy as np
 #import spacy
 #from spellchecker import SpellChecker
 
@@ -160,12 +161,12 @@ def displayGates():
     display([[0, 0], [1, 0], [0, 1], [1, 1]], [2, 2], 1, "Or")
 
 
-# Implementation of the Gradient Method Algorithm given below.
+# Implementation of the Gradient Method Algorithm.
 # Finds the local and global minimums of the following functions and
-# the points that reach this minimum:
+# the points that reach its minimum:
 # (1) F1(x1, x2, x3) = 2x1^2 + 2x2^2 + x3^2 − 2x1x2 − 2x2x3 − 2x1 + 3
 # (2) F2(x1, x2) = 3x1^4 + 4x1^3 − 12x1^2 + 12x2^2 − 24x2
-# In the end displays the minimums and the result
+# In the end displays the minimums and the result.
 def displayGradientMethod():
     def F1(vec):
         return (2 * vec[0]**2 + 2 * vec[1]**2 + vec[2]**2 - 2 * vec[0] * vec[1] - 2 * vec[1] * vec[2] - 2 * vec[0] + 3)
@@ -194,6 +195,101 @@ def displayGradientMethod():
     gradient(0, 1, 0.01, 0.00001)
     gradient(1, 1, 0.01, 0.00001)
 
+
+# Implementation of the gradient method algorithm 
+# for backpropagation that performs XOR training.
+def displayBackPropagation():
+    u = [[0,0,1], [0,1,1], [1,0,1], [1,1,1]]
+    z = [0,1,1,0]
+    c = 0.5
+    eps = 0.00001
+    beta = 2.5
+    N = 1
+
+    def Df(x):
+        return((beta * math.exp(-beta*x))/(1+math.exp(-beta*x))**2)
+    def f(x):
+        return(1/(1+math.exp(-beta*x)))
+        
+    def update(s_old, w_old):
+        x = [[f(sum([w_old[i][j]*u[p][j] for j in range(3)])) for i in range(2)]+[1] for p in range(4)]
+        y = [f(sum([s_old[i] * x[p][i] for i in range(3)])) for p in range(4)]
+        DE_s = [sum([(y[p] - z[p]) * Df(sum([s_old[k]*x[p][k] for k in range(3)]))*x[p][i] for p in range(4)]) for i in range(3)]
+        DE_w = [[sum([(y[p]-z[p])*Df(sum([s_old[k]*x[p][k] for k in range(3)]))*s_old[i]*Df(sum([w_old[i][l]*u[p][l] for l in range(3)]))*u[p][j] for p in range(4)]) for j in range(3)] for i in range(2)]
+        s_new = [s_old[i] - c * DE_s[i] for i in range(3)]
+        w_new = [[w_old[i][j] - c * DE_w[i][j] for j in range(3)] for i in range(2)]
+        return s_new, w_new, y
+        
+    def propagation():
+        s_old = [0, 1, 2]
+        w_old = [[0, 1, 2], [0, 1, 2]]
+        s_new, w_new, y = update(s_old, w_old)
+        
+        while max( max([abs(s_new[i] - s_old[i]) for i in range(3)]), max([max([abs(w_new[i][j] - w_old[i][j]) for j in range(3)]) for i in range(2)]) ) > eps:
+            s_old = s_new
+            w_old = w_new
+            s_new, w_new, y = update(s_old, w_old)
+        print("y =", y, "\ns_old =", s_old, "\nw_old =", w_old, '\n')
+        
+    propagation()
+
+
+# Implementation of Boltzmann Machine (BM) on the example of image "1" for z.
+# Gets different number of reversed "1" image occurence depending on temperature chosen.
+# max_t = number of steps to take
+# Displays newly computed images troughout max_t iterations.
+# In the end displays a comparision between "1" image and it's reversed version in occurences.
+def displayBoltzmannMachine(max_t = 15):
+    n = 25
+    in_one_row = 5
+    z = np.array(
+        [0, 0, 0, 0, 0,
+        0, 1, 1, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 1, 0, 0])
+    nz = np.array([(i+1)%2 for i in z])
+    c = np.array([[0 if i==j else (z[i]-1/2) * (z[j] - 1/2) for j in range(n)] for i in range(n)])
+    w = 2*c
+    theta = np.array([sum(c[i]) for i in range(n)])
+
+    def display(x):
+        count = 0
+        while count < len(x):
+            print(x[count: count + in_one_row])
+            count += in_one_row
+        print()
+
+    def f(x, T):
+        return 1/(1 + math.exp(-x/T))
+
+    def next(x, T):
+        B = [random() for i in range(n)]
+        u = [sum(w[i]*x) - theta[i] for i in range(n)]
+        new_x = np.array([1 if 0 <= B[i] and B[i] <= f(u[i], T)
+            else 0 for i in range(n)])
+        return new_x
+
+    def iterate(x, t, T):
+        count_z = 0
+        count_nz = 0
+        while(t < max_t):
+            if (x == z).all(): count_z += 1
+            elif (x == nz).all(): count_nz += 1
+            print("t =", t)
+            display(x)
+            t += 1
+            x = next(x, T)
+        print("\n\nNumber of occurences: ", count_z, " (", count_z/max_t, "%)", sep='')
+        display(z)
+        print("Number of occurences: ", count_nz, " (", count_nz/max_t, "%)", sep='')
+        display(nz)
+
+    T = 1
+    t = 0
+    x = np.array([1 if random() > 1/2 else 0 for i in range(n)])
+
+    iterate(x, t, T)
 
 
 #  Combinatorial Algorithms prep functions

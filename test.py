@@ -1,3 +1,0 @@
-import pyamu
-
-pyamu.displayBoltzmannMachine()

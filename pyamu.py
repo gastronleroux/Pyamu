@@ -2,8 +2,13 @@ import math
 from random import random
 from difflib import SequenceMatcher
 import numpy as np
-#import spacy
-#from spellchecker import SpellChecker
+import spacy
+from spellchecker import SpellChecker
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model.logistic import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 
 
@@ -121,6 +126,54 @@ def frLemmatize(sen):
         
     return lemmaObjectList
 
+# Spam classifier
+# Needs two files in same directory: spam_not_spam.csv and spam_not_spam_2.csv
+# Each file has two columns, text and spam. Text represents the body of a spam email, spam informs
+# if the mail was spam (1 if spam, 0 if not).
+# 
+# The function outputs an analysis of models built based on these files .
+def spamClassifier:
+    def model_results(modelName, testDataAuthor, Y_test, Y_predict):
+        print("Results for " + modelName + " model on " + testDataAuthor + " data test:")
+        print("Accuracy score:", accuracy_score(Y_test, Y_predict))
+        print("Precision score:", precision_score(Y_test, Y_predict, zero_division=0))
+        print("Recall score:", recall_score(Y_test, Y_predict, zero_division=0), "\n")
+
+    vectorizer = TfidfVectorizer()
+    df = pd.read_csv('./spam_not_spam.csv', delimiter=',')
+
+    X_train_raw, X_test_raw, Y_train, Y_test = train_test_split(df["text"], df["spam"], test_size = 0.2)
+    X_train = vectorizer.fit_transform(X_train_raw)
+    X_test = vectorizer.transform(X_test_raw)
+
+    tfidfModel = LogisticRegression()
+    tfidfModel.fit(X_train, Y_train)
+
+    Y_predict = tfidfModel.predict(X_test)
+    model_results("tf-idf", "user1", Y_test, Y_predict)
+
+    df2 = pd.read_csv('./spam_not_spam_2.csv', delimiter=',')
+    X_test2 = vectorizer.transform(df2["text"])
+    Y_test2 = df2["spam"]
+    Y_predict2 = tfidfModel.predict(X_test2)
+    model_results("tf-idf", "user2", Y_test2, Y_predict2)
+
+    df2_spam = df2[df2["spam"] == 1]
+    df2_nonspam = df2[df2["spam"] == 0]
+    X_train_raw_spam, X_test_raw_spam, Y_train_spam, Y_test_spam = \
+        train_test_split(df2_spam["text"], df2_spam["spam"], test_size = 0.2)
+    X_train_raw_nonspam, X_test_raw_nonspam, Y_train_nonspam, Y_test_nonspam = \
+        train_test_split(df2_nonspam["text"], df2_nonspam["spam"], test_size = 0.2)
+
+    X_train3 = vectorizer.fit_transform(pd.concat([X_train_raw, X_train_raw_spam, X_train_raw_nonspam]))
+    X_test3 = vectorizer.transform(pd.concat([X_test_raw, X_test_raw_spam, X_test_raw_nonspam]))
+    Y_train3 = pd.concat([Y_train, Y_train_spam, Y_train_nonspam])
+    Y_test3 = pd.concat([Y_test, Y_test_spam, Y_test_nonspam])
+
+    tfidfModelMixed = LogisticRegression()
+    tfidfModelMixed.fit(X_train3, Y_train3)
+    Y_predict3 = tfidfModelMixed.predict(X_test3)
+    model_results("tf-idf (mixed)", "combined", Y_test3, Y_predict3)
 
 
 #  Neural Networks

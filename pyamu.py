@@ -132,7 +132,7 @@ def frLemmatize(sen):
 # if the mail was spam (1 if spam, 0 if not).
 # 
 # The function outputs an analysis of models built based on these files .
-def spamClassifier:
+def spamClassifier():
     def model_results(modelName, testDataAuthor, Y_test, Y_predict):
         print("Results for " + modelName + " model on " + testDataAuthor + " data test:")
         print("Accuracy score:", accuracy_score(Y_test, Y_predict))

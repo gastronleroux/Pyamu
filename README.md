@@ -1,6 +1,6 @@
 # Pyamu
 
-Compilation of university tasks and projects done in python
+Compilation of university tasks and projects done in python.
 
 ## Installation and Setup Instructions
 

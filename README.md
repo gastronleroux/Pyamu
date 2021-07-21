@@ -12,9 +12,10 @@ Compilation of university tasks and projects done in python.
 Required packages:
 
 ```
-pip install -U scikit-learn
+pip install numpy
 pip install pandas
 pip install pyspellchecker
+pip install -U scikit-learn
 pip install -U spacy
 python -m spacy download fr_core_news_lg
 ```

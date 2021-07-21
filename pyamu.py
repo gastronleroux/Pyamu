@@ -6,7 +6,7 @@ import spacy
 from spellchecker import SpellChecker
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model.logistic import LogisticRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
@@ -67,6 +67,8 @@ class LemmaObject:
         self.probability = probability
         
 def frLemmatize(sen):
+    if not isinstance(sen, str):
+        raise TypeError
     lemmaObjectList = []
     # python -m spacy download fr_core_news_lg
     sp = spacy.load('fr_core_news_lg')
@@ -116,8 +118,8 @@ def frLemmatize(sen):
                 probability = 0.0
             elif len(spell.candidates(word.text)) > 1:
                 candidates = spell.candidates(word.text)
-                wordsProbabilityMean = sum([spell.word_probability(prob) for prob in candidates]) / len(candidates)
-                correctedProbability = spell.word_probability(corrected)
+                wordsProbabilityMean = sum([spell.word_usage_frequency(prob) for prob in candidates]) / len(candidates)
+                correctedProbability = spell.word_usage_frequency(corrected)
                 probability = (1 - (wordsProbabilityMean / correctedProbability))
             if probability != 0.0:
                 probability = probability  * 0.9 + similarity * 0.1
@@ -285,6 +287,7 @@ def displayBackPropagation():
         print("y =", y, "\ns_old =", s_old, "\nw_old =", w_old, '\n')
         
     propagation()
+    displayBackPropagation.update = update
 
 
 # Implementation of Boltzmann Machine (BM) on the example of image "1" for z.

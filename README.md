@@ -17,7 +17,7 @@ pip install pandas
 pip install pyspellchecker
 pip install -U scikit-learn
 pip install -U spacy
-python -m spacy download fr_core_news_lg
+spacy download fr_core_news_lg
 ```
 ## Functions
 Detailed descriptions of the functions can be found in the code comments.

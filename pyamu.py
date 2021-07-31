@@ -412,7 +412,7 @@ class G:
 # Returns an array of arrays containing numbers in a lexicographical.
 # If k is not specified, it's equal to n. Default initial value is 1.
 # n = number of elements, k = maximum value, initial = minimum value
-# e.g. lexicalOrder(1, 3) == [
+# e.g. lexicalOrder(3, 2) == [
 # [1, 1, 1], [1, 1, 2], [1, 2, 1], [1, 2, 2],
 # [2, 1, 1], [2, 1, 2], [2, 2, 1], [2, 2, 2]
 # ]
@@ -557,7 +557,7 @@ def kSubsetSuccessor(n, k, T):
 
 # Returns the rank (int) of the k-element subset T of the set {1, ..., n}
 # in the lexicographic ordering of k-element subsets.
-# e.g. pyamu.kSubsetRank(5, 3, [2, 3, 5]) == 7
+# e.g. kSubsetRank(5, 3, [2, 3, 5]) == 7
 def kSubsetRank(n, k, T):
     T = [0, *T]
     return int(sum([sum([binomial(n - j, k - i) for j in range(T[i-1]+1, T[i])]) for i in range(1, k+1)]))
@@ -587,7 +587,6 @@ def kSubsetFromRank(n, k, r):
 # [ [1, 3], [2] ]
 # ]
 def subsetDivision(n):
-
     def divide(B):
         divisions = []
         T = [[] for i in range(max(B))]

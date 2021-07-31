@@ -12,15 +12,21 @@ Compilation of university tasks and projects done in python.
 Required packages:
 
 ```
-pip install numpy
-pip install pandas
-pip install pyspellchecker
+pip install -U numpy
+pip install -U pandas
+pip install -U pyspellchecker
 pip install -U scikit-learn
 pip install -U spacy
 spacy download fr_core_news_lg
 ```
+For testing: `pip install -U pytest`
+
 ## Functions
 Detailed descriptions of the functions can be found in the code comments.
+
+## Tests
+To test pyamu simply write `pytest` in console when inside the directory containing pyamu.py and test_pyamu.py.  
+You can also test selected parts of pyamu, e.g. `pytest -k NaturalLanguageProcessing` will only test Natural Language Processing functions.
 
 ### Natural Language Processing
 * frLemmatize

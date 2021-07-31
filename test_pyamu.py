@@ -66,7 +66,7 @@ class TestNaturalLanguageProcessing:
             assert result.probability <= 1
 
 
-class TestTestCombinatorialAlgorithms:
+class TestCombinatorialAlgorithms:
     def test_argument_type(self):
         result = amu.lexicalOrder(3, 2)
         assert result == [

@@ -442,7 +442,7 @@ def lexicalOrder(n, k = None, initial = 1):
 
 # Returns a bijection dictionary between binary strings of length n and {1, 2, ..., n} subsets.
 # The key is a binary string (tuples), the value is a {1, 2, ..., n} subset (array),
-# e.g. bijectionSubsets(2)[[1, 0]] == [1]
+# e.g. bijectionSubsets(2)[(1, 0)] == [1]
 def bijectionSubsets(n):
     if n < 0: raise ValueError("Number of values mustn't be a negative number")
 

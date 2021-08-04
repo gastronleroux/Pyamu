@@ -1,4 +1,3 @@
-# @pytest.mark.parametrize("i", list(range(len(frLemmatizeSentenceSplit))))
 import pyamu as amu
 import pytest
 

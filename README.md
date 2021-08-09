@@ -21,12 +21,12 @@ spacy download fr_core_news_lg
 ```
 For testing: `pip install -U pytest`
 
-## Functions
-Detailed descriptions of the functions can be found in the code comments.
-
 ## Tests
 To test pyamu simply write `pytest` in console when inside the directory containing pyamu.py and test_pyamu.py.  
 You can also test selected parts of pyamu, e.g. `pytest -k NaturalLanguageProcessing` will only test Natural Language Processing functions.
+
+## Functions
+Detailed descriptions of the functions can be found in the code comments.
 
 ### Natural Language Processing
 * frLemmatize
